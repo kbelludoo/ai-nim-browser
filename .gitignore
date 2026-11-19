@@ -1,0 +1,21 @@
+# Binaries and build artifacts
+*.exe
+*.dll
+*.so
+*.dylib
+*.pdb
+nimcache/
+build/
+bin/
+*.o
+*.obj
+
+# Memory databases & test runtime state
+.ai-browser-memory/
+*.db
+*.db-wal
+*.db-shm
+
+# OS generated
+.DS_Store
+Thumbs.db
