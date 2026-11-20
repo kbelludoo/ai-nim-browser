@@ -1,12 +1,13 @@
 import std/[os, strutils, syncio, options]
 import ../core/[types, dom, semantic, transport, browser]
 import ../mcp/server as mcpserver
+import ../ui/window as uiwindow
 
 proc main() =
   let args = commandLineParams()
 
   if args.len > 0 and (args[0] == "--version" or args[0] == "-v"):
-    echo "ai-nim-browser v1.0.0 (parity track)"
+    echo "ai-nim-browser v1.1.0 (hybrid: headless + QuickJS + WebView2)"
     quit(0)
 
   if args.len > 0 and args[0] == "mcp":
@@ -14,8 +15,13 @@ proc main() =
     s.serve()
     quit(0)
 
+  if args.len > 0 and args[0] == "ui":
+    let target = if args.len > 1: args[1] else: "https://example.com"
+    uiwindow.openDesktopBrowser(target)
+    quit(0)
+
   let b = newHttpSnapshotBrowser()
-  echo "AI Nim Browser REPL / CLI (Type 'help' or commands: open <url>, snapshot, text, click <ref>, fill <ref> <val>, back, forward, mcp, quit)"
+  echo "AI Nim Browser REPL / CLI (Type 'help' or commands: open <url> [--render-js], ui <url>, snapshot, text, mcp, quit)"
 
   var line: string
   while true:
@@ -35,7 +41,8 @@ proc main() =
       break
     of "help":
       echo "Comandos disponíveis:"
-      echo "  open <url>               - Abre e renderiza semanticamente a página"
+      echo "  open <url> [--render-js] - Abre e renderiza a página (com QuickJS se solicitado)"
+      echo "  ui [url]                 - Abre a janela gráfica nativa (WebView2/Chromium)"
       echo "  snapshot                 - Mostra o snapshot de acessibilidade e ações"
       echo "  text                     - Extrai o texto limpo da página"
       echo "  click <ref>              - Clica no elemento (#ref ou l*/b*)"
@@ -44,16 +51,22 @@ proc main() =
       echo "  forward                  - Avança no histórico"
       echo "  mcp                      - Inicia o servidor MCP sobre stdin/stdout"
       echo "  quit                     - Sai do programa"
+    of "ui":
+      let target = if parts.len > 1: parts[1] else: "https://example.com"
+      uiwindow.openDesktopBrowser(target)
     of "open":
       if parts.len < 2:
-        echo "Uso: open <url>"
+        echo "Uso: open <url> [--render-js]"
         continue
       let url = parts[1]
+      let renderJs = parts.len > 2 and parts[2] == "--render-js"
       try:
-        let snap = b.navigate(url)
+        let snap = b.navigate(url, renderJs = renderJs)
         echo "\n=== ", snap.title, " ==="
         echo "URL: ", snap.url
         echo "Elementos interativos detectados: ", snap.elements.len
+        if renderJs:
+          echo "(Renderizado e hidratado via motor QuickJS embutido)"
       except Exception as e:
         echo "Erro ao navegar: ", e.msg
     of "snapshot":

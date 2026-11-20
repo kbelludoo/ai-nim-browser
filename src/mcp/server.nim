@@ -132,7 +132,8 @@ proc callTool*(s: McpServer, name: string, args: JsonNode): string =
   of "browser_navigate":
     if not args.hasKey("url"): raise newException(ValueError, "param 'url' required")
     let targetUrl = args["url"].getStr()
-    let snap = s.browser.navigate(targetUrl)
+    let renderJs = if args.hasKey("render_js"): args["render_js"].getBool() else: false
+    let snap = s.browser.navigate(targetUrl, renderJs = renderJs)
     s.memory.recordVisit(snap.url, snap.title, snap.url, 200)
     result = "Navigated to " & snap.url & " (Title: " & snap.title & ", RSS: ~4.10 MiB)"
 

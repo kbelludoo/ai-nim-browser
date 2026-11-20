@@ -1,8 +1,8 @@
 import std/[options, strutils]
 import types, dom
 
-proc parseSemanticHtml*(url: string, html: string): SemanticSnapshot =
-  let page = parsePage(url, html, 200, 0)
+proc parseSemanticHtml*(url: string, html: string, renderJs: bool = false): SemanticSnapshot =
+  let page = parsePage(url, html, 200, 0, renderJs = renderJs)
   var elements: seq[SemanticElement] = @[]
 
   for link in page.links:

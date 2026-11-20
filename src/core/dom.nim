@@ -1,6 +1,6 @@
 import std/[strutils, tables, options, uri]
 import std/unicode except splitWhitespace
-import types, html_parser
+import types, html_parser, hydration
 
 const HiddenTags* = [
   "script", "style", "noscript", "template", "svg", "head", "title"
@@ -575,7 +575,7 @@ proc collectForms*(doc: Document): (seq[Form], seq[Button], seq[Field]) =
 
   (forms, buttons, inputs)
 
-proc parsePage*(url: string, html: string, status: int = 200, textLimit: int = 0): Page =
+proc parsePage*(url: string, html: string, status: int = 200, textLimit: int = 0, renderJs: bool = false): Page =
   let doc = parseHtmlDocument(html, url)
   var page = Page(
     url: url,
@@ -620,4 +620,8 @@ proc parsePage*(url: string, html: string, status: int = 200, textLimit: int = 0
     page.inputs = inputs
 
   page.text = textBuilder.finish()
+
+  if renderJs:
+    hydratePage(page, html, url)
+
   page

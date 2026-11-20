@@ -51,18 +51,18 @@ proc currentSnapshot*(b: HttpSnapshotBrowser): Option[SemanticSnapshot] =
 proc currentText*(b: HttpSnapshotBrowser): Option[string] =
   b.currentText
 
-proc fetchAndParse*(b: HttpSnapshotBrowser, targetUrl: string): (SemanticSnapshot, string) =
+proc fetchAndParse*(b: HttpSnapshotBrowser, targetUrl: string, renderJs: bool = false): (SemanticSnapshot, string) =
   let res = b.transport.get(targetUrl)
   if not res.isOk:
     raise newException(BrowserError, res.err)
 
   let resp = res.val
-  let snap = parseSemanticHtml(resp.finalUrl, resp.body)
-  let page = parsePage(resp.finalUrl, resp.body, resp.status, 0)
+  let snap = parseSemanticHtml(resp.finalUrl, resp.body, renderJs = renderJs)
+  let page = parsePage(resp.finalUrl, resp.body, resp.status, 0, renderJs = renderJs)
   (snap, page.text)
 
-proc navigate*(b: HttpSnapshotBrowser, targetUrl: string): SemanticSnapshot =
-  let (snap, text) = b.fetchAndParse(targetUrl)
+proc navigate*(b: HttpSnapshotBrowser, targetUrl: string, renderJs: bool = false): SemanticSnapshot =
+  let (snap, text) = b.fetchAndParse(targetUrl, renderJs = renderJs)
 
   if b.historyIndex.isSome:
     b.history.setLen(b.historyIndex.get + 1)
